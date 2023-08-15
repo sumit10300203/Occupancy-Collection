@@ -47,7 +47,7 @@ with col[0].container():
     if st.session_state.occupancy:
         st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now().date(), datetime.now().time().strftime("%H:%M:%S"), datetime.now().time().strftime("%H:%M:%S"), st.session_state.occupancy]
         st.session_state.occupancy = ''
-    edited_df = col[0].data_editor(st.session_state.df, num_rows="dynamic", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Date', 'Last Modified'])
+    edited_df = col[0].data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Date', 'Last Modified'])
     st.session_state.df = edited_df
 
 st.caption('**:red[Note:] Only Time Entered and Occupancy can be modified.**')
