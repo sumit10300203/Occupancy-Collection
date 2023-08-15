@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.header(":red[Welcome] Sumit", anchor = False)
+st.header(":red[Welcome]", anchor = False)
 st.divider()
 
 if 'df' not in st.session_state:
