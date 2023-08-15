@@ -7,3 +7,5 @@ Library Used:
 * Streamlit
 
 Link to Website: [Occupancy Collection](https://occupancy-collection-2023.streamlit.app/)
+Screenshots:
+![image](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/06329f39-2226-4487-9256-eba618c93368)
