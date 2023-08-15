@@ -34,7 +34,8 @@ def update():
         for j in tmp[i]:
             edited_df.loc[i][j] = tmp[i][j]
         edited_df.loc[i]['Date'] = datetime.now().date()
-        edited_df.loc[i]['Last Modified'] = datetime.now().time().strftime("%H:%M:%S")
+        edited_df.loc[i]['Last Modified'] = datetime.now(timezone("Asia/Kolkata")).time().strftime("%H:%M:%S")
+        edited_df.loc[i]['Date'] = datetime.now(timezone("Asia/Kolkata")).date()
 
     tmp = st.session_state.editeddf['deleted_rows']
     for i in tmp:
@@ -45,7 +46,7 @@ col = st.columns(2)
 with col[0].container():
     col[0].text_input('Enter current occupancy', key='widget', placeholder = '', on_change=submit)
     if st.session_state.occupancy:
-        st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now().date(), datetime.now().time().strftime("%H:%M:%S"), datetime.now().time().strftime("%H:%M:%S"), st.session_state.occupancy]
+        st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).date(), datetime.now(timezone("Asia/Kolkata")).time().strftime("%H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).time().strftime("%H:%M:%S"), st.session_state.occupancy]
         st.session_state.occupancy = ''
     edited_df = col[0].data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Date', 'Last Modified'])
     st.session_state.df = edited_df
