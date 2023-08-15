@@ -5,3 +5,5 @@ Created a Pure Python Streamlit web app to store occupancy data with timestamp r
 Library Used:
 * Pandas
 * Streamlit
+
+Link to Website: https://occupancy-collection-2023.streamlit.app/
