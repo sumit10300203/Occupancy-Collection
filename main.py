@@ -57,4 +57,4 @@ st.caption('**:red[Note:] Only Time Entered and Occupancy can be modified.**')
 disabled = True
 if st.session_state.df.shape[0]:
     disabled = False
-st.download_button(label="Download data as CSV", data = convert_df(st.session_state.df), file_name=f'Occupancy_{datetime.now().date()}_{datetime.now().time().strftime("%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
+st.download_button(label="Download data as CSV", data = convert_df(st.session_state.df), file_name=f'Occupancy_{datetime.now(timezone("Asia/Kolkata")).date()}_{datetime.now(timezone("Asia/Kolkata")).time().strftime("%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
