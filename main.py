@@ -14,11 +14,6 @@ st.set_page_config(
 if 'authorization_df' not in st.session_state:
     st.session_state.authorization_df = pd.read_csv("Authentication.csv")
 
-# names = authorization_df['Name']
-# key = authorization_df['username']
-# password = authorization_df['key']
-# admins = set(admin_df['username'].to_list())
-
 credentials = {"usernames":{}}
 
 for uname,name,pwd in zip(st.session_state.authorization_df['username'],st.session_state.authorization_df['Name'],st.session_state.authorization_df['key']):
@@ -55,11 +50,7 @@ if authentication_status:
     st.header(f":red[Welcome] {name}", anchor = False)
     authenticator.logout("Logout", "sidebar")
     
-    if st.session_state.authorization_df[st.session_state.authorization_df['username'] == username]['admin'].item():
-        tab1, tab2, tab3, tab4 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View CSV file", "🎭 Admin Controls"])
-    else:
-        tab1, tab2, tab3 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View CSV file"])
-        tab4 = None
+    tab1, tab2, tab3 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View CSV file"])
     
     if 'df' not in st.session_state:
         st.session_state.df = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Position', 'Occupancy'])
@@ -142,38 +133,38 @@ if authentication_status:
             st.session_state.view_df = pd.read_csv(view_csv_file)
             st.dataframe(st.session_state.view_df, use_container_width = True)
         
-    if tab4:            
-        with tab4.container():
-            col = st.columns(2)
-            with col[0].container():
-                col[0].subheader("Add Users", anchor= False)
-                add_remove_users = col[0].radio("Operation:", ('Add', 'Remove'), horizontal = True)
-                if add_remove_users == 'Add':
-                    user_add_1 = col[0].text_input("**Enter Username**", key = 'user_add_1', placeholder="Enter Username")
-                    user_add_2 = col[0].text_input("**Enter Name**", placeholder="Enter Name")
-                    user_add_3 = col[0].text_input("**Enter Password**", type = 'password', placeholder="Enter Password")
-                    proceed1 = col[0].button(label = "Continue", key = 'proceed1')
-                    if user_add_1 and user_add_2 and user_add_3 and proceed1:
-                        tmp = st.session_state.authorization_df[st.session_state.authorization_df['username'] == user_add_1]
-                        if tmp.shape[0]:
-                            col[0].warning(f"**{user_add_1} is already an User**")
-                        else:
-                            st.session_state.authorization_df.loc[-1] = [user_add_2, user_add_1, stauth.Hasher([user_add_3]).generate()[0], 0]
-                            st.session_state.authorization_df.reset_index(inplace = True, drop = True)
-                            col[0].success(f"**{user_add_1} added as User**")
-                    st.session_state.authorization_df.to_csv('Authentication.csv', index = False)
-                else:
-                    user_del_1 = col[0].text_input("**Enter Username**", key = 'user_del_1', placeholder="Enter Username")
-                    proceed2 = col[0].button(label = "Continue", key = 'proceed2')
-                    if user_del_1 and proceed2:
-                        tmp = st.session_state.authorization_df[st.session_state.authorization_df['username'] == user_del_1]
-                        if tmp.shape[0]:
-                            st.session_state.authorization_df = st.session_state.authorization_df[st.session_state.authorization_df['username'] != user_del_1]
-                            st.session_state.authorization_df.reset_index(drop = True, inplace = True)
-                            col[0].success(f"**{user_del_1} deleted as User**")
-                        else:
-                            col[0].error(f"**{user_del_1} not a User**")
-                    st.session_state.authorization_df.to_csv('Authentication.csv', index = False)
+    # if tab4:            
+    #     with tab4.container():
+    #         col = st.columns(2)
+    #         with col[0].container():
+    #             col[0].subheader("Add Users", anchor= False)
+    #             add_remove_users = col[0].radio("Operation:", ('Add', 'Remove'), horizontal = True)
+    #             if add_remove_users == 'Add':
+    #                 user_add_1 = col[0].text_input("**Enter Username**", key = 'user_add_1', placeholder="Enter Username")
+    #                 user_add_2 = col[0].text_input("**Enter Name**", placeholder="Enter Name")
+    #                 user_add_3 = col[0].text_input("**Enter Password**", type = 'password', placeholder="Enter Password")
+    #                 proceed1 = col[0].button(label = "Continue", key = 'proceed1')
+    #                 if user_add_1 and user_add_2 and user_add_3 and proceed1:
+    #                     tmp = st.session_state.authorization_df[st.session_state.authorization_df['username'] == user_add_1]
+    #                     if tmp.shape[0]:
+    #                         col[0].warning(f"**{user_add_1} is already an User**")
+    #                     else:
+    #                         st.session_state.authorization_df.loc[-1] = [user_add_2, user_add_1, stauth.Hasher([user_add_3]).generate()[0], 0]
+    #                         st.session_state.authorization_df.reset_index(inplace = True, drop = True)
+    #                         col[0].success(f"**{user_add_1} added as User**")
+    #                 st.session_state.authorization_df.to_csv('Authentication.csv', index = False)
+    #             else:
+    #                 user_del_1 = col[0].text_input("**Enter Username**", key = 'user_del_1', placeholder="Enter Username")
+    #                 proceed2 = col[0].button(label = "Continue", key = 'proceed2')
+    #                 if user_del_1 and proceed2:
+    #                     tmp = st.session_state.authorization_df[st.session_state.authorization_df['username'] == user_del_1]
+    #                     if tmp.shape[0]:
+    #                         st.session_state.authorization_df = st.session_state.authorization_df[st.session_state.authorization_df['username'] != user_del_1]
+    #                         st.session_state.authorization_df.reset_index(drop = True, inplace = True)
+    #                         col[0].success(f"**{user_del_1} deleted as User**")
+    #                     else:
+    #                         col[0].error(f"**{user_del_1} not a User**")
+    #                 st.session_state.authorization_df.to_csv('Authentication.csv', index = False)
 
             # with col[1].container():
             #     col[1].subheader("Add/Remove Admins", anchor= False)
