@@ -9,7 +9,9 @@ Library Used:
 Link to Website: [Occupancy Collection](https://occupancy-collection-2023.streamlit.app/)
 
 Screenshots:
-![image](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/22f94abd-bd6a-452c-a2f8-d94ddb91a161)
-![1](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/4a0885a4-3e89-4ca6-94b7-d91bdcf2058a)
-![2](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/ea0223fe-97aa-45c3-ae53-9ab057f00523)
-![3](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/b8d04854-692b-4634-a151-159bfc7558e4)
+![0](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/094981d0-d085-41aa-a3ec-5a6c74cd5c37)
+![1](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/c67cb0b7-0692-437c-8ff9-185de66886e2)
+![2](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/7d93f982-c208-437d-91ff-4c7d29b0d6c5)
+![3](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/fcd3f650-491a-418f-a5a2-434fdb55938c)
+![4](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/41430e85-01b8-45d7-b047-83a11126568c)
+![5](https://github.com/sumit10300203/Occupancy-Collection/assets/66067910/b7b58167-dd29-4c52-ae95-0f17f34ee1f0)
