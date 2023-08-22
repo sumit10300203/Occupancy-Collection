@@ -53,7 +53,7 @@ if authentication_status:
     tab1, tab2, tab3 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View CSV file"])
     
     if 'df' not in st.session_state:
-        st.session_state.df = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Position', 'Occupancy'])
+        st.session_state.df = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position'])
 
     if 'view_df' not in st.session_state:
         st.session_state.view_df = pd.DataFrame()
