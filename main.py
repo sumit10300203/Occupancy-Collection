@@ -25,10 +25,10 @@ authenticator = stauth.Authenticate(credentials, "occupancy_collector_login", "l
 name, authentication_status, username = authenticator.login("Login", "main")
 
 if authentication_status == False:
-    st.error("Username/password is incorrect")
+    st.error("**🚨 Username/password is incorrect**")
 
 if authentication_status is None:
-    st.warning("Please enter your username and password")
+    st.warning("**⚠️ Please enter your username and password**")
 
 if authentication_status:
     @st.cache_data
@@ -50,13 +50,13 @@ if authentication_status:
     st.header(f":red[Welcome] {name}", anchor = False)
     authenticator.logout("Logout", "sidebar")
     
-    tab1, tab2, tab3 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View CSV file"])
+    tab1, tab2, tab3, tab4 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View / Edit CSV file", "🔗 Concat multiple CSVs"])
     
     if 'df' not in st.session_state:
         st.session_state.df = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position'])
 
-    if 'view_df' not in st.session_state:
-        st.session_state.view_df = pd.DataFrame()
+    if 'view_edit_df' not in st.session_state:
+        st.session_state.view_edit_df = pd.DataFrame()
     
     if 'occupancy' not in st.session_state:
         st.session_state.occupancy = ''
@@ -87,6 +87,15 @@ if authentication_status:
         st.download_button(label="**Download data as CSV**", data = convert_df(st.session_state.df), file_name=f'Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
     
     with tab2.container():
+        def remove_na_col(df):
+            remove_col = []
+            for col in df.columns:
+                store = df[col].isna().value_counts().to_dict()
+                if True in store and store[True] == df.shape[0]:
+                    remove_col.append(col)
+            df.drop(remove_col, axis = 1, inplace = True)
+            return df
+    
         disabled = True
         merged_df = pd.DataFrame()
         col = st.columns(2)
@@ -99,10 +108,8 @@ if authentication_status:
             option1 = st.radio("**Choose Occupancy Collection Type**", ('Direct', 'Cummulative'), horizontal = True)
             option2 = st.radio("**Keep Zeros ?**", ('No', 'Yes'), horizontal = True)
             try:
-                sensor_data = pd.read_csv(sensor_file, usecols = ['Date', 'Time', 'CO (ppm)', 'NO2 (ppm)', 'CO2 (ppm)', 'TVOC (ppb)', 
-                                                                                      'PM1 (ug/m3)', 'PM2.5 (ug/m3)', 'PM10 (ug/m3)', 'Temperature (C)',
-                                                                                      'Humidity (%)', 'Sound (dB)'], parse_dates=[['Date', 'Time']])
-                occupancy_data = pd.read_csv(occupancy_file, usecols = ['Time Entered', 'Occupancy', 'Position'])
+                sensor_data = remove_na_col(pd.read_csv(sensor_file, parse_dates=[['Date', 'Time']]))
+                occupancy_data = remove_na_col(pd.read_csv(occupancy_file, usecols = ['Time Entered', 'Occupancy', 'Position']))
                 sensor_data.rename({"Date_Time": "Timestamp"}, axis = 1, inplace = True)
                 sensor_data.set_index("Timestamp", drop = True, inplace = True)
                 occupancy_data['Time Entered'] = pd.to_datetime(occupancy_data['Time Entered'])
@@ -121,17 +128,91 @@ if authentication_status:
                     merged_df = merged_df[merged_df['Occupancy'] != 0].reset_index(drop = True)
                 disabled = False
             except:
-                st.error('Error in CSV files, please check the columns name are identical to the requirement and re upload again', icon="🚨")
+                st.error('**Error in CSV files, please check the columns name are identical to the requirement and re upload again**', icon="🚨")
                 disabled = True
 
         st.download_button(label = "**Download Merged CSV file**", data = convert_df(merged_df, index = False), file_name=f'Sensor_data_with_Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
         st.caption('**:red[Note:] If timestamp range matches in both csv, then only it will be merged.**')
 
     with tab3.container():
-        view_csv_file = st.file_uploader("**Choose CSV file**", type = "csv")
+        def reset():
+            st.session_state.view_edit_df = pd.DataFrame()
+        
+        view_csv_file = st.file_uploader("**Choose CSV file**", type = "csv", on_change = reset)
         if view_csv_file:
-            st.session_state.view_df = pd.read_csv(view_csv_file)
-            st.dataframe(st.session_state.view_df, use_container_width = True)
+            option1 = st.radio(label = "a", options = ('View', 'Edit'), horizontal = True, label_visibility = 'collapsed')
+            if st.button("**Import / Re Import CSV**"):
+                st.session_state.view_edit_df = pd.read_csv(view_csv_file)
+            if option1 == 'View':
+                st.dataframe(st.session_state.view_edit_df, use_container_width = True)
+                st.caption(f"**:red[Current Row range -] [{0 if st.session_state.view_edit_df.shape[0] else -1} : {st.session_state.view_edit_df.shape[0] - 1}], :red[Current Column range -] [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")
+                store_col = {}
+                for col in range(0, st.session_state.view_edit_df.shape[1]):
+                    store_col[st.session_state.view_edit_df.columns[col]] = col
+                st.json({"Column index info": store_col}, expanded = False)
+            else:
+                st.divider()
+                try:
+                    option2 = st.radio(label = "b", options = ('Row Slicing', 'Column Slicing'), horizontal = True, label_visibility = 'collapsed')
+                    option3 = st.radio(label = "c", options = ('Keep', 'Remove'), horizontal = True, label_visibility = 'collapsed')
+                    slicing_input = st.columns(8)
+                    start = slicing_input[0].text_input("**Enter starting index**")
+                    end = slicing_input[1].text_input("**Enter ending index**")
+                    proceed = st.button("**Continue**")
+                    if option2 == 'Row Slicing':
+                        if start and end and proceed:
+                            start = int(start)
+                            end = int(end) + 1
+                            if 0 <= start <= end <= st.session_state.view_edit_df.shape[0]:
+                                if option3 == 'Keep':
+                                    st.session_state.view_edit_df = st.session_state.view_edit_df.iloc[start: end].reset_index(drop = True)
+                                else:
+                                    st.session_state.view_edit_df = st.session_state.view_edit_df.drop(st.session_state.view_edit_df.iloc[start: end].index).reset_index(drop = True)
+                            else:
+                                if st.session_state.view_edit_df.shape[0] == 0:
+                                    st.warning(f"**⚠️ Rows are empty**")
+                                else:
+                                    st.warning(f"**⚠️ Row's range slicing going out of bounds. Please select between [{0} : {st.session_state.view_edit_df.shape[0] - 1}]**")
+                    else:
+                        if start and end and proceed:
+                            start = int(start)
+                            end = int(end) + 1
+                            if 0 <= start <= end <= st.session_state.view_edit_df.shape[1]:
+                                if option3 == 'Keep':
+                                    st.session_state.view_edit_df = st.session_state.view_edit_df[st.session_state.view_edit_df.columns[start: end]]
+                                else:
+                                    st.session_state.view_edit_df = st.session_state.view_edit_df.drop(st.session_state.view_edit_df.columns[start: end], axis = 1)
+                            else:
+                                if st.session_state.view_edit_df.shape[0] == 0:
+                                    st.warning(f"**⚠️ Columns are empty**")
+                                else:
+                                    st.warning(f"**⚠️ Column's range slicing going out of bounds. Please select between [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")                    
+                    st.data_editor(st.session_state.view_edit_df, use_container_width = True, num_rows="fixed", hide_index = False, key=None, on_change=None)
+                except:
+                    st.error('**Error, please check the slicing values**', icon="🚨")
+                st.caption("**:red[Note:] Make sure the slicing values are in range of the CSV file. Index Column cannot be removed**")
+                st.caption(f"**:red[Current Row range -] [{0 if st.session_state.view_edit_df.shape[0] else -1} : {st.session_state.view_edit_df.shape[0] - 1}], :red[Current Column range -] [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")
+                store_col = {}
+                for col in range(0, st.session_state.view_edit_df.shape[1]):
+                    store_col[st.session_state.view_edit_df.columns[col]] = col
+                st.json({"Column index info": store_col}, expanded = False)
+                edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", placeholder = 'Enter file name')
+                if edited_file_name:
+                    st.download_button(label = "**Download Edited CSV file**", data = convert_df(st.session_state.view_edit_df, index = False), file_name = f'{edited_file_name}.csv', mime='text/csv')
+        else:
+            st.warning("**⚠️ Select a CSV**")
+
+    with tab4.container():
+        concat_csvs = st.file_uploader("**Choose CSV files**", type = "csv", accept_multiple_files = True)
+        st.caption('**:red[Note:] In the view above, lowest csv file data will be at top in merged csv file.**')
+        if len(concat_csvs) < 2:
+            st.warning("**⚠️ Select at least 2 CSV's. Make sure the CSV's have similar column name at similar positions, or null values will be inplaced**")
+        else:
+            for i in range(0, len(concat_csvs)):
+                concat_csvs[i] = pd.read_csv(concat_csvs[i])
+            merged_file_name = st.columns(2)[0].text_input("**Enter merged csv file name**", placeholder = 'Enter file name')
+            if merged_file_name:
+                st.download_button(label="**Download Merged CSV file**", data = convert_df(pd.concat(concat_csvs, ignore_index = True)), file_name=f'{merged_file_name}.csv', mime='text/csv')
         
     # if tab4:            
     #     with tab4.container():
