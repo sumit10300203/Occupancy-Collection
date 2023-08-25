@@ -1,5 +1,7 @@
 import streamlit as st
 import streamlit_authenticator as stauth
+from streamlit_extras.dataframe_explorer import dataframe_explorer
+from streamlit_extras.grid import grid
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -11,8 +13,9 @@ st.set_page_config(
     page_icon="👨‍👩‍👧‍👦",
     layout="wide"
 )
+
 if 'authorization_df' not in st.session_state:
-    st.session_state.authorization_df = pd.read_csv("Authentication.csv")
+    st.session_state['authorization_df'] = pd.read_csv("Authentication.csv")
 
 credentials = {"usernames":{}}
 
@@ -35,7 +38,7 @@ if authentication_status:
     def convert_df(df, index = False):
         return df.to_csv(index = index).encode('utf-8')
 
-    def submit_3():
+    def submit():
         st.session_state.occupancy = st.session_state.widget
         st.session_state.widget = ''
 
@@ -53,31 +56,37 @@ if authentication_status:
     tab1, tab2, tab3, tab4 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View / Edit CSV file", "🔗 Concat multiple CSVs"])
     
     if 'df' not in st.session_state:
-        st.session_state.df = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position'])
+        st.session_state['df'] = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position'])
 
     if 'view_edit_df' not in st.session_state:
-        st.session_state.view_edit_df = pd.DataFrame()
+        st.session_state['view_edit_df'] = pd.DataFrame()
     
     if 'occupancy' not in st.session_state:
-        st.session_state.occupancy = ''
+        st.session_state['occupancy'] = ''
 
     if 'widget' not in st.session_state:
-        st.session_state.widget = ''
+        st.session_state['widget'] = ''
     
     with tab1.container():
-        col = st.columns(2)
-        with col[0].container():
-            col_inner = col[0].columns(2)
-            with col_inner[0].container():
-                position = col_inner[0].text_input('**Enter current Position**', placeholder = 'Enter Position')
-            if position:
-                with col_inner[0].container():
-                    col_inner[0].text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit_3)
-                if st.session_state.occupancy and position:
-                    st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower()]
-                    st.session_state.occupancy = ''
-            edited_df = col[0].data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'])
-            st.session_state.df = edited_df
+        my_grid = grid([3, 2], vertical_align="bottom")
+        position = my_grid.text_input('**Enter current Position**', placeholder = 'Enter Position')
+        my_grid.text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit)
+        if st.session_state.occupancy and position:
+            st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower()]
+            st.session_state.occupancy = ''
+        edited_df = st.data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'])
+        st.session_state.df = edited_df
+        # col_inner = col[0].columns(2)
+        # with col_inner[0].container():
+        #     position = col_inner[0].text_input('**Enter current Position**', placeholder = 'Enter Position')
+        # if position:
+        #     with col_inner[0].container():
+        #         col_inner[0].text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit_3)
+        #     if st.session_state.occupancy and position:
+        #         st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower()]
+        #         st.session_state.occupancy = ''
+        # edited_df = col[0].data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'])
+        # st.session_state.df = edited_df
     
         st.caption('**:red[Note:] Only Time Entered and Occupancy can be modified.**')
     
@@ -140,27 +149,34 @@ if authentication_status:
         
         view_csv_file = st.file_uploader("**Choose CSV file**", type = "csv", on_change = reset)
         if view_csv_file:
-            option1 = st.radio(label = "a", options = ('View', 'Edit'), horizontal = True, label_visibility = 'collapsed')
-            if st.button("**Import / Re Import CSV**"):
+            if st.button("**Import / Re-Import CSV / Reset Filters, Slicers**"):
                 st.session_state.view_edit_df = pd.read_csv(view_csv_file)
-            if option1 == 'View':
-                st.dataframe(st.session_state.view_edit_df, use_container_width = True)
-                st.caption(f"**:red[Current Row range -] [{0 if st.session_state.view_edit_df.shape[0] else -1} : {st.session_state.view_edit_df.shape[0] - 1}], :red[Current Column range -] [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")
+            tab3_3 = st.tabs(['**View**', '**Edit**'])
+            with tab3_3[0].container():
+                filtered_df = dataframe_explorer(st.session_state.view_edit_df, case=False).reset_index(drop = True)
+                st.caption(f"**:red[Note:] Filters have no effect on slicers**")
+                if st.button('Refresh Data'):
+                    pass
+                st.dataframe(filtered_df, use_container_width=True)
+                st.caption(f"**:red[Current Row range -] [{0 if filtered_df.shape[0] else -1} : {filtered_df.shape[0] - 1}], :red[Current Column range -] [{0 if filtered_df.shape[1] else -1} : {filtered_df.shape[1] - 1}]**")
                 store_col = {}
-                for col in range(0, st.session_state.view_edit_df.shape[1]):
-                    store_col[st.session_state.view_edit_df.columns[col]] = col
+                for col in range(0, filtered_df.shape[1]):
+                    store_col[filtered_df.columns[col]] = col
                 st.json({"Column index info": store_col}, expanded = False)
-            else:
-                st.divider()
+                edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", key = 'tab3_3_0', placeholder = 'Enter file name')
+                if edited_file_name:
+                    st.download_button(label = "**Download Edited CSV file**", data = convert_df(filtered_df, index = False), file_name = f'{edited_file_name}.csv', mime='text/csv')
+            with tab3_3[1].container():
+                my_grid = grid([2, 2, 1.5, 1.5, 1], vertical_align="bottom")
                 try:
-                    option2 = st.radio(label = "b", options = ('Row Slicing', 'Column Slicing'), horizontal = True, label_visibility = 'collapsed')
-                    option3 = st.radio(label = "c", options = ('Keep', 'Remove'), horizontal = True, label_visibility = 'collapsed')
-                    slicing_input = st.columns(8)
-                    start = slicing_input[0].text_input("**Enter starting index**")
-                    end = slicing_input[1].text_input("**Enter ending index**")
-                    proceed = st.button("**Continue**")
+                    option2 = my_grid.selectbox(label = "**Slicing Type**", options = ('Row Slicing', 'Column Slicing'), index = 0, label_visibility = 'visible')
+                    option3 = my_grid.selectbox(label = "**Operation**", options = ('Keep', 'Remove'), label_visibility = 'visible')
+                    slicing_input = st.columns(6)
+                    start = my_grid.text_input("**Enter starting index**")
+                    end = my_grid.text_input("**Enter ending index**")
+                    proceed_3 = my_grid.button("**Continue**", use_container_width = 1)
                     if option2 == 'Row Slicing':
-                        if start and end and proceed:
+                        if start and end and proceed_3:
                             start = int(start)
                             end = int(end) + 1
                             if 0 <= start <= end <= st.session_state.view_edit_df.shape[0]:
@@ -174,7 +190,7 @@ if authentication_status:
                                 else:
                                     st.warning(f"**⚠️ Row's range slicing going out of bounds. Please select between [{0} : {st.session_state.view_edit_df.shape[0] - 1}]**")
                     else:
-                        if start and end and proceed:
+                        if start and end and proceed_3:
                             start = int(start)
                             end = int(end) + 1
                             if 0 <= start <= end <= st.session_state.view_edit_df.shape[1]:
@@ -188,7 +204,8 @@ if authentication_status:
                                 else:
                                     st.warning(f"**⚠️ Column's range slicing going out of bounds. Please select between [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")                    
                     st.data_editor(st.session_state.view_edit_df, use_container_width = True, num_rows="fixed", hide_index = False, key=None, on_change=None)
-                except:
+                except Exception as e:
+                    print(e)
                     st.error('**Error, please check the slicing values**', icon="🚨")
                 st.caption("**:red[Note:] Make sure the slicing values are in range of the CSV file. Index Column cannot be removed**")
                 st.caption(f"**:red[Current Row range -] [{0 if st.session_state.view_edit_df.shape[0] else -1} : {st.session_state.view_edit_df.shape[0] - 1}], :red[Current Column range -] [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")
@@ -196,7 +213,7 @@ if authentication_status:
                 for col in range(0, st.session_state.view_edit_df.shape[1]):
                     store_col[st.session_state.view_edit_df.columns[col]] = col
                 st.json({"Column index info": store_col}, expanded = False)
-                edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", placeholder = 'Enter file name')
+                edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", key = 'tab3_3_1', placeholder = 'Enter file name')
                 if edited_file_name:
                     st.download_button(label = "**Download Edited CSV file**", data = convert_df(st.session_state.view_edit_df, index = False), file_name = f'{edited_file_name}.csv', mime='text/csv')
         else:
