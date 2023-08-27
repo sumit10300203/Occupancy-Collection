@@ -157,18 +157,18 @@ if authentication_status:
                     filtered_df = dataframe_explorer(st.session_state.view_edit_df, case=False).reset_index(drop = True)
                 except:
                     st.warning("Inconvenient valued columns are not allowed", icon = '⚠️')
-                st.caption(f"**:red[Note:] Filters have no effect on slicers**")
-                if st.button('Refresh Data'):
-                    pass
-                st.dataframe(filtered_df, use_container_width=True)
-                st.caption(f"**:red[Current Row range -] [{0 if filtered_df.shape[0] else -1} : {filtered_df.shape[0] - 1}], :red[Current Column range -] [{0 if filtered_df.shape[1] else -1} : {filtered_df.shape[1] - 1}]**")
-                store_col = {}
-                for col in range(0, filtered_df.shape[1]):
-                    store_col[filtered_df.columns[col]] = col
-                st.json({"Column index info": store_col}, expanded = False)
-                edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", key = 'tab3_3_0', placeholder = 'Enter file name')
-                if edited_file_name:
-                    st.download_button(label = "**Download Edited CSV file**", data = convert_df(filtered_df, index = False), file_name = f'{edited_file_name}.csv', mime='text/csv')
+                    st.caption(f"**:red[Note:] Filters have no effect on slicers**")
+                    if st.button('Refresh Data'):
+                        pass
+                    st.dataframe(filtered_df, use_container_width=True)
+                    st.caption(f"**:red[Current Row range -] [{0 if filtered_df.shape[0] else -1} : {filtered_df.shape[0] - 1}], :red[Current Column range -] [{0 if filtered_df.shape[1] else -1} : {filtered_df.shape[1] - 1}]**")
+                    store_col = {}
+                    for col in range(0, filtered_df.shape[1]):
+                        store_col[filtered_df.columns[col]] = col
+                    st.json({"Column index info": store_col}, expanded = False)
+                    edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", key = 'tab3_3_0', placeholder = 'Enter file name')
+                    if edited_file_name:
+                        st.download_button(label = "**Download Edited CSV file**", data = convert_df(filtered_df, index = False), file_name = f'{edited_file_name}.csv', mime='text/csv')
             with tab3_3[1].container():
                 my_grid = grid([2, 2, 1.5, 1.5, 1], vertical_align="bottom")
                 try:
