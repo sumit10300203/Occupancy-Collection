@@ -96,15 +96,6 @@ if authentication_status:
         st.download_button(label="**Download data as CSV**", data = convert_df(st.session_state.df), file_name=f'Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
     
     with tab2.container():
-        def remove_na_col(df):
-            remove_col = []
-            for col in df.columns:
-                store = df[col].isna().value_counts().to_dict()
-                if True in store and store[True] == df.shape[0]:
-                    remove_col.append(col)
-            df.drop(remove_col, axis = 1, inplace = True)
-            return df
-    
         disabled = True
         merged_df = pd.DataFrame()
         col = st.columns(2)
