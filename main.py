@@ -117,8 +117,8 @@ if authentication_status:
             option1 = st.radio("**Choose Occupancy Collection Type**", ('Direct', 'Cummulative'), horizontal = True)
             option2 = st.radio("**Keep Zeros ?**", ('No', 'Yes'), horizontal = True)
             try:
-                sensor_data = remove_na_col(pd.read_csv(sensor_file, parse_dates=[['Date', 'Time']]))
-                occupancy_data = remove_na_col(pd.read_csv(occupancy_file, usecols = ['Time Entered', 'Occupancy', 'Position']))
+                sensor_data = pd.read_csv(sensor_file, parse_dates=[['Date', 'Time']]).dropna(how='all', axis='columns')
+                occupancy_data = pd.read_csv(occupancy_file, usecols = ['Time Entered', 'Occupancy', 'Position']).dropna(how='all', axis='columns')
                 sensor_data.rename({"Date_Time": "Timestamp"}, axis = 1, inplace = True)
                 sensor_data.set_index("Timestamp", drop = True, inplace = True)
                 occupancy_data['Time Entered'] = pd.to_datetime(occupancy_data['Time Entered'])
@@ -153,7 +153,10 @@ if authentication_status:
                 st.session_state.view_edit_df = pd.read_csv(view_csv_file)
             tab3_3 = st.tabs(['**View**', '**Edit**'])
             with tab3_3[0].container():
-                filtered_df = dataframe_explorer(st.session_state.view_edit_df, case=False).reset_index(drop = True)
+                try:
+                    filtered_df = dataframe_explorer(st.session_state.view_edit_df, case=False).reset_index(drop = True)
+                except:
+                    st.warning("Inconvenient valued columns are not allowed", icon = '⚠️')
                 st.caption(f"**:red[Note:] Filters have no effect on slicers**")
                 if st.button('Refresh Data'):
                     pass
