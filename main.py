@@ -154,7 +154,6 @@ if authentication_status:
             tab3_3 = st.tabs(['**View**', '**Edit**'])
             with tab3_3[0].container():
                 filtered_df = dataframe_explorer(st.session_state.view_edit_df, case=False).reset_index(drop = True)
-                st.warning("Inconvenient valued columns are not allowed", icon = '⚠️')
                 st.caption(f"**:red[Note:] Filters have no effect on slicers**")
                 if st.button('Refresh Data'):
                     pass
