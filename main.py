@@ -1,6 +1,5 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-from streamlit_extras.dataframe_explorer import dataframe_explorer
 from streamlit_extras.grid import grid
 import pandas as pd
 import numpy as np
@@ -50,11 +49,20 @@ if authentication_status:
             edited_df.loc[i]['Last Modified'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
             edited_df.loc[i]['Date'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
 
-    st.header(f":red[Welcome] {name}", anchor = False)
-    authenticator.logout("Logout", "sidebar")
+    my_grid = grid([15, 1], vertical_align="top")
+    with my_grid.container():
+        st.header(f":red[Welcome] {name}", anchor = False)
+    with my_grid.container():
+        authenticator.logout("Logout", "main")
+
+    st.markdown('''
+        **🡥 Redirect to 📋[Pandas DataFrame Viewer](https://pandas-dataframe-viewer-plotter.streamlit.app/) to visualize data with AI**
+                ''')
     
-    tab1, tab2, tab3, tab4 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View / Edit CSV file", "🔗 Concat multiple CSVs"])
+    # tab1, tab2, tab3, tab4 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View / Edit CSV file", "🔗 Concat multiple CSVs"])
     
+    tab1, tab2 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data"])
+
     if 'df' not in st.session_state:
         st.session_state['df'] = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position'])
 
@@ -134,93 +142,93 @@ if authentication_status:
         st.download_button(label = "**Download Merged CSV file**", data = convert_df(merged_df, index = False), file_name=f'Sensor_data_with_Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
         st.caption('**:red[Note:] If timestamp range matches in both csv, then only it will be merged.**')
 
-    with tab3.container():
-        def reset():
-            st.session_state.view_edit_df = pd.DataFrame()
+    # with tab3.container():
+    #     def reset():
+    #         st.session_state.view_edit_df = pd.DataFrame()
         
-        view_csv_file = st.file_uploader("**Choose CSV file**", type = "csv", on_change = reset)
-        if view_csv_file:
-            if st.button("**Import / Re-Import CSV / Reset Filters, Slicers**"):
-                st.session_state.view_edit_df = pd.read_csv(view_csv_file).dropna(how='all', axis='columns')
-            tab3_3 = st.tabs(['**View**', '**Edit**'])
-            with tab3_3[0].container():
-                filtered_df = dataframe_explorer(st.session_state.view_edit_df, case=False).reset_index(drop = True)
-                st.caption(f"**:red[Note:] Filters have no effect on slicers**")
-                if st.button('Refresh Data'):
-                    pass
-                st.dataframe(filtered_df, use_container_width=True)
-                st.caption(f"**:red[Current Row range -] [{0 if filtered_df.shape[0] else -1} : {filtered_df.shape[0] - 1}], :red[Current Column range -] [{0 if filtered_df.shape[1] else -1} : {filtered_df.shape[1] - 1}]**")
-                store_col = {}
-                for col in range(0, filtered_df.shape[1]):
-                    store_col[filtered_df.columns[col]] = col
-                st.json({"Column index info": store_col}, expanded = False)
-                edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", key = 'tab3_3_0', placeholder = 'Enter file name')
-                if edited_file_name:
-                    st.download_button(label = "**Download Edited CSV file**", data = convert_df(filtered_df, index = False), file_name = f'{edited_file_name}.csv', mime='text/csv')
-            with tab3_3[1].container():
-                my_grid = grid([2, 2, 1.5, 1.5, 1], vertical_align="bottom")
-                try:
-                    option2 = my_grid.selectbox(label = "**Slicing Type**", options = ('Row Slicing', 'Column Slicing'), index = 0, label_visibility = 'visible')
-                    option3 = my_grid.selectbox(label = "**Operation**", options = ('Keep', 'Remove'), label_visibility = 'visible')
-                    slicing_input = st.columns(6)
-                    start = my_grid.text_input("**Enter starting index**")
-                    end = my_grid.text_input("**Enter ending index**")
-                    proceed_3 = my_grid.button("**Continue**", use_container_width = 1)
-                    if option2 == 'Row Slicing':
-                        if start and end and proceed_3:
-                            start = int(start)
-                            end = int(end) + 1
-                            if 0 <= start <= end <= st.session_state.view_edit_df.shape[0]:
-                                if option3 == 'Keep':
-                                    st.session_state.view_edit_df = st.session_state.view_edit_df.iloc[start: end].reset_index(drop = True)
-                                else:
-                                    st.session_state.view_edit_df = st.session_state.view_edit_df.drop(st.session_state.view_edit_df.iloc[start: end].index).reset_index(drop = True)
-                            else:
-                                if st.session_state.view_edit_df.shape[0] == 0:
-                                    st.warning(f"**⚠️ Rows are empty**")
-                                else:
-                                    st.warning(f"**⚠️ Row's range slicing going out of bounds. Please select between [{0} : {st.session_state.view_edit_df.shape[0] - 1}]**")
-                    else:
-                        if start and end and proceed_3:
-                            start = int(start)
-                            end = int(end) + 1
-                            if 0 <= start <= end <= st.session_state.view_edit_df.shape[1]:
-                                if option3 == 'Keep':
-                                    st.session_state.view_edit_df = st.session_state.view_edit_df[st.session_state.view_edit_df.columns[start: end]]
-                                else:
-                                    st.session_state.view_edit_df = st.session_state.view_edit_df.drop(st.session_state.view_edit_df.columns[start: end], axis = 1)
-                            else:
-                                if st.session_state.view_edit_df.shape[0] == 0:
-                                    st.warning(f"**⚠️ Columns are empty**")
-                                else:
-                                    st.warning(f"**⚠️ Column's range slicing going out of bounds. Please select between [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")                    
-                    st.data_editor(st.session_state.view_edit_df, use_container_width = True, num_rows="fixed", hide_index = False, key=None, on_change=None)
-                except Exception as e:
-                    print(e)
-                    st.error('**Error, please check the slicing values**', icon="🚨")
-                st.caption("**:red[Note:] Make sure the slicing values are in range of the CSV file. Index Column cannot be removed**")
-                st.caption(f"**:red[Current Row range -] [{0 if st.session_state.view_edit_df.shape[0] else -1} : {st.session_state.view_edit_df.shape[0] - 1}], :red[Current Column range -] [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")
-                store_col = {}
-                for col in range(0, st.session_state.view_edit_df.shape[1]):
-                    store_col[st.session_state.view_edit_df.columns[col]] = col
-                st.json({"Column index info": store_col}, expanded = False)
-                edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", key = 'tab3_3_1', placeholder = 'Enter file name')
-                if edited_file_name:
-                    st.download_button(label = "**Download Edited CSV file**", data = convert_df(st.session_state.view_edit_df, index = False), file_name = f'{edited_file_name}.csv', mime='text/csv')
-        else:
-            st.warning("**⚠️ Select a CSV**")
+    #     view_csv_file = st.file_uploader("**Choose CSV file**", type = "csv", on_change = reset)
+    #     if view_csv_file:
+    #         if st.button("**Import / Re-Import CSV / Reset Filters, Slicers**"):
+    #             st.session_state.view_edit_df = pd.read_csv(view_csv_file).dropna(how='all', axis='columns')
+    #         tab3_3 = st.tabs(['**View**', '**Edit**'])
+    #         with tab3_3[0].container():
+    #             filtered_df = dataframe_explorer(st.session_state.view_edit_df, case=False).reset_index(drop = True)
+    #             st.caption(f"**:red[Note:] Filters have no effect on slicers**")
+    #             if st.button('Refresh Data'):
+    #                 pass
+    #             st.dataframe(filtered_df, use_container_width=True)
+    #             st.caption(f"**:red[Current Row range -] [{0 if filtered_df.shape[0] else -1} : {filtered_df.shape[0] - 1}], :red[Current Column range -] [{0 if filtered_df.shape[1] else -1} : {filtered_df.shape[1] - 1}]**")
+    #             store_col = {}
+    #             for col in range(0, filtered_df.shape[1]):
+    #                 store_col[filtered_df.columns[col]] = col
+    #             st.json({"Column index info": store_col}, expanded = False)
+    #             edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", key = 'tab3_3_0', placeholder = 'Enter file name')
+    #             if edited_file_name:
+    #                 st.download_button(label = "**Download Edited CSV file**", data = convert_df(filtered_df, index = False), file_name = f'{edited_file_name}.csv', mime='text/csv')
+    #         with tab3_3[1].container():
+    #             my_grid = grid([2, 2, 1.5, 1.5, 1], vertical_align="bottom")
+    #             try:
+    #                 option2 = my_grid.selectbox(label = "**Slicing Type**", options = ('Row Slicing', 'Column Slicing'), index = 0, label_visibility = 'visible')
+    #                 option3 = my_grid.selectbox(label = "**Operation**", options = ('Keep', 'Remove'), label_visibility = 'visible')
+    #                 slicing_input = st.columns(6)
+    #                 start = my_grid.text_input("**Enter starting index**")
+    #                 end = my_grid.text_input("**Enter ending index**")
+    #                 proceed_3 = my_grid.button("**Continue**", use_container_width = 1)
+    #                 if option2 == 'Row Slicing':
+    #                     if start and end and proceed_3:
+    #                         start = int(start)
+    #                         end = int(end) + 1
+    #                         if 0 <= start <= end <= st.session_state.view_edit_df.shape[0]:
+    #                             if option3 == 'Keep':
+    #                                 st.session_state.view_edit_df = st.session_state.view_edit_df.iloc[start: end].reset_index(drop = True)
+    #                             else:
+    #                                 st.session_state.view_edit_df = st.session_state.view_edit_df.drop(st.session_state.view_edit_df.iloc[start: end].index).reset_index(drop = True)
+    #                         else:
+    #                             if st.session_state.view_edit_df.shape[0] == 0:
+    #                                 st.warning(f"**⚠️ Rows are empty**")
+    #                             else:
+    #                                 st.warning(f"**⚠️ Row's range slicing going out of bounds. Please select between [{0} : {st.session_state.view_edit_df.shape[0] - 1}]**")
+    #                 else:
+    #                     if start and end and proceed_3:
+    #                         start = int(start)
+    #                         end = int(end) + 1
+    #                         if 0 <= start <= end <= st.session_state.view_edit_df.shape[1]:
+    #                             if option3 == 'Keep':
+    #                                 st.session_state.view_edit_df = st.session_state.view_edit_df[st.session_state.view_edit_df.columns[start: end]]
+    #                             else:
+    #                                 st.session_state.view_edit_df = st.session_state.view_edit_df.drop(st.session_state.view_edit_df.columns[start: end], axis = 1)
+    #                         else:
+    #                             if st.session_state.view_edit_df.shape[0] == 0:
+    #                                 st.warning(f"**⚠️ Columns are empty**")
+    #                             else:
+    #                                 st.warning(f"**⚠️ Column's range slicing going out of bounds. Please select between [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")                    
+    #                 st.data_editor(st.session_state.view_edit_df, use_container_width = True, num_rows="fixed", hide_index = False, key=None, on_change=None)
+    #             except Exception as e:
+    #                 print(e)
+    #                 st.error('**Error, please check the slicing values**', icon="🚨")
+    #             st.caption("**:red[Note:] Make sure the slicing values are in range of the CSV file. Index Column cannot be removed**")
+    #             st.caption(f"**:red[Current Row range -] [{0 if st.session_state.view_edit_df.shape[0] else -1} : {st.session_state.view_edit_df.shape[0] - 1}], :red[Current Column range -] [{0 if st.session_state.view_edit_df.shape[1] else -1} : {st.session_state.view_edit_df.shape[1] - 1}]**")
+    #             store_col = {}
+    #             for col in range(0, st.session_state.view_edit_df.shape[1]):
+    #                 store_col[st.session_state.view_edit_df.columns[col]] = col
+    #             st.json({"Column index info": store_col}, expanded = False)
+    #             edited_file_name = st.columns(2)[0].text_input("**Enter edited csv file name**", key = 'tab3_3_1', placeholder = 'Enter file name')
+    #             if edited_file_name:
+    #                 st.download_button(label = "**Download Edited CSV file**", data = convert_df(st.session_state.view_edit_df, index = False), file_name = f'{edited_file_name}.csv', mime='text/csv')
+    #     else:
+    #         st.warning("**⚠️ Select a CSV**")
 
-    with tab4.container():
-        concat_csvs = st.file_uploader("**Choose CSV files**", type = "csv", accept_multiple_files = True)
-        st.caption('**:red[Note:] In the view above, lowest csv file data will be at top in merged csv file.**')
-        if len(concat_csvs) < 2:
-            st.warning("**⚠️ Select at least 2 CSV's. Make sure the CSV's have similar column name at similar positions, or null values will be inplaced**")
-        else:
-            for i in range(0, len(concat_csvs)):
-                concat_csvs[i] = pd.read_csv(concat_csvs[i])
-            merged_file_name = st.columns(2)[0].text_input("**Enter merged csv file name**", placeholder = 'Enter file name')
-            if merged_file_name:
-                st.download_button(label="**Download Merged CSV file**", data = convert_df(pd.concat(concat_csvs, ignore_index = True)), file_name=f'{merged_file_name}.csv', mime='text/csv')
+    # with tab4.container():
+    #     concat_csvs = st.file_uploader("**Choose CSV files**", type = "csv", accept_multiple_files = True)
+    #     st.caption('**:red[Note:] In the view above, lowest csv file data will be at top in merged csv file.**')
+    #     if len(concat_csvs) < 2:
+    #         st.warning("**⚠️ Select at least 2 CSV's. Make sure the CSV's have similar column name at similar positions, or null values will be inplaced**")
+    #     else:
+    #         for i in range(0, len(concat_csvs)):
+    #             concat_csvs[i] = pd.read_csv(concat_csvs[i])
+    #         merged_file_name = st.columns(2)[0].text_input("**Enter merged csv file name**", placeholder = 'Enter file name')
+    #         if merged_file_name:
+    #             st.download_button(label="**Download Merged CSV file**", data = convert_df(pd.concat(concat_csvs, ignore_index = True)), file_name=f'{merged_file_name}.csv', mime='text/csv')
         
     # if tab4:            
     #     with tab4.container():
