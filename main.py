@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit_authenticator as stauth
 from streamlit_extras.grid import grid
+from streamlit_extras.no_default_selectbox import selectbox
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -61,7 +62,7 @@ if authentication_status:
     
     # tab1, tab2, tab3, tab4 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View / Edit CSV file", "🔗 Concat multiple CSVs"])
     
-    tab1, tab2 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data"])
+    tab1, tab2, tab3 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "📩 Send file using Mail"])
 
     if 'df' not in st.session_state:
         st.session_state['df'] = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position'])
@@ -141,6 +142,29 @@ if authentication_status:
 
         st.download_button(label = "**Download Merged CSV file**", data = convert_df(merged_df, index = False), file_name=f'Sensor_data_with_Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
         st.caption('**:red[Note:] If timestamp range matches in both csv, then only it will be merged.**')
+
+    with tab3.container():
+        def local_css(file_name):
+            with open(file_name) as f:
+                st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+        
+        tab3_col = st.columns(2)
+        with tab3_col[0]:
+            if st.checkbox("**Send to other mail id**"):
+                mail_id = st.text_input("**Enter mail id**", placeholder = "Enter the Mail ID", label_visibility = "collapsed")
+            else:
+                mail_id = selectbox("**Select the mail id from the below Authorised users**", options = st.session_state['authorization_df']['username'].to_list(), no_selection_label = None)
+            if mail_id:
+                contact_form = f"""
+                    <form method="POST" action="https://formsubmit.co/{mail_id}" enctype="multipart/form-data">
+                    <input type="hidden" name="_captcha" value="false">
+                    <textarea name="message" placeholder="Any Comments"></textarea>
+                    <input type="file" name="attachment" multiple = "multiple">
+                    <button type="submit">Send</button>
+                    </form>
+                    """
+                st.markdown(contact_form, unsafe_allow_html = True)
+                local_css("style/style.css")
 
     # with tab3.container():
     #     def reset():
