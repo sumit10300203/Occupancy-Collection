@@ -65,7 +65,7 @@ if authentication_status:
     tab1, tab2, tab3 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "📩 Send file using Mail"])
 
     if 'df' not in st.session_state:
-        st.session_state['df'] = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position'])
+        st.session_state['df'] = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position', 'Room Condition', 'Room Type', 'Floor No.', 'Weather'])
 
     if 'view_edit_df' not in st.session_state:
         st.session_state['view_edit_df'] = pd.DataFrame()
@@ -77,11 +77,15 @@ if authentication_status:
         st.session_state['widget'] = ''
     
     with tab1.container():
-        my_grid = grid([3, 2], vertical_align="bottom")
-        position = my_grid.text_input('**Enter current Position**', placeholder = 'Enter Position')
+        my_grid = grid([2, 2, 2], vertical_align="bottom")
+        weather = my_grid.selectbox('**Specify Weather**', options = ["sunny", "cloudy", "partly cloudy", "overcast", "raining", "snowing", "foggy", "thunder and lightning", "windy"])
+        room_condition = my_grid.selectbox('**Enter Room Condition**', options = ["ac", "non ac"])
+        room_type = my_grid.selectbox('**Enter Room Type**', options = ["classroom", "lab"])
+        floor = my_grid.text_input('**Enter Floor No.**', placeholder = 'Enter Floor No.')
+        position = my_grid.text_input('**Enter sensor-box current Position**', placeholder = 'Enter Position')
         my_grid.text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit)
         if st.session_state.occupancy and position:
-            st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower()]
+            st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower(), room_condition.lower(), room_type.lower(), floor.lower(), weather.lower()]
             st.session_state.occupancy = ''
         edited_df = st.data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'])
         st.session_state.df = edited_df
@@ -118,7 +122,7 @@ if authentication_status:
             option2 = st.radio("**Keep Zeros ?**", ('No', 'Yes'), horizontal = True)
             try:
                 sensor_data = pd.read_csv(sensor_file, parse_dates=[['Date', 'Time']]).dropna(how='all', axis='columns')
-                occupancy_data = pd.read_csv(occupancy_file, usecols = ['Time Entered', 'Occupancy', 'Position']).dropna(how='all', axis='columns')
+                occupancy_data = pd.read_csv(occupancy_file, usecols = ['Time Entered', 'Occupancy', 'Position', 'Room Condition', 'Room Type', 'Floor No.', 'Weather']).dropna(how='all', axis='columns')
                 sensor_data.rename({"Date_Time": "Timestamp"}, axis = 1, inplace = True)
                 sensor_data.set_index("Timestamp", drop = True, inplace = True)
                 occupancy_data['Time Entered'] = pd.to_datetime(occupancy_data['Time Entered'])
@@ -131,6 +135,10 @@ if authentication_status:
                 merged_df.reset_index(inplace = True)
                 merged_df['Occupancy'].fillna(method="ffill", inplace = True)
                 merged_df['Position'].fillna(method="ffill", inplace = True)
+                merged_df['Room Condition'].fillna(method="ffill", inplace = True)
+                merged_df['Room Type'].fillna(method="ffill", inplace = True)
+                merged_df['Floor No.'].fillna(method="ffill", inplace = True)
+                merged_df['Weather'].fillna(method="ffill", inplace = True)
                 merged_df.dropna(how = 'any', inplace = True)
                 if option2 == 'No':
                     merged_df['Occupancy'].replace(to_replace=0, method='ffill', inplace=True)
