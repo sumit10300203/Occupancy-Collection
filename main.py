@@ -8,6 +8,7 @@ from datetime import datetime
 from pytz import timezone
 import json as js
 
+
 st.set_page_config(
     page_title="Occupancy Collection",
     page_icon="👨‍👩‍👧‍👦",
