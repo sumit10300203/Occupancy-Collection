@@ -85,7 +85,7 @@ if authentication_status:
         position = my_grid.selectbox('**Enter sensor-box current Position**', options = ["middle", "frontside", "backside", "corner"])
         my_grid.text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit)
         if st.session_state.occupancy and position:
-            st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower(), room_condition.lower(), room_type.lower(), floor.lower(), weather.lower()]
+            st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower(), room_condition.lower(), room_type.lower(), floor, weather.lower()]
             st.session_state.occupancy = ''
         edited_df = st.data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'])
         st.session_state.df = edited_df
