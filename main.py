@@ -83,7 +83,7 @@ if authentication_status:
         room_condition = my_grid.selectbox('**Enter Room Condition**', options = ["ac", "non ac"])
         room_type = my_grid.selectbox('**Enter Room Type**', options = ["classroom", "lab"])
         floor = my_grid.text_input('**Enter Floor No.**', placeholder = 'Enter Floor No.')
-        position = my_grid.text_input('**Enter sensor-box current Position**', placeholder = 'Enter Position')
+        position = my_grid.selectbox('**Enter sensor-box current Position**', options = ["middle", "frontside", "backside", "corner"])
         my_grid.text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit)
         if st.session_state.occupancy and position:
             st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower(), room_condition.lower(), room_type.lower(), floor.lower(), weather.lower()]
