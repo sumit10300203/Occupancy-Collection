@@ -81,7 +81,7 @@ if authentication_status:
         weather = my_grid.selectbox('**Specify Weather**', options = ["sunny", "cloudy", "partly cloudy", "overcast", "raining", "snowing", "foggy", "thunder and lightning", "windy"])
         room_condition = my_grid.selectbox('**Enter Room Condition**', options = ["ac", "non ac"])
         room_type = my_grid.selectbox('**Enter Room Type**', options = ["classroom", "lab"])
-        floor = my_grid.text_input('**Enter Floor No.**', placeholder = 'Enter Floor No.')
+        floor = my_grid.selectbox('**Enter Floor No.**', options = np.arange(0, 16))
         position = my_grid.selectbox('**Enter sensor-box current Position**', options = ["middle", "frontside", "backside", "corner"])
         my_grid.text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit)
         if st.session_state.occupancy and position:
