@@ -46,9 +46,9 @@ if authentication_status:
         tmp = st.session_state.editeddf['edited_rows']
         for i in tmp:
             for j in tmp[i]:
-                edited_df.loc[i][j] = tmp[i][j]
-            edited_df.loc[i]['Last Modified'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
-            edited_df.loc[i]['Date'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
+                edited_df.loc[i, j] = tmp[i][j]
+            edited_df.loc[i, 'Last Modified'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
+            # edited_df.loc[i]['Date'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
 
     my_grid = grid([15, 1], vertical_align="top")
     with my_grid.container():
@@ -81,13 +81,20 @@ if authentication_status:
         weather = my_grid.selectbox('**Specify Weather**', options = ["sunny", "cloudy", "partly cloudy", "overcast", "raining", "snowing", "foggy", "thunder and lightning", "windy"])
         room_condition = my_grid.selectbox('**Enter Room Condition**', options = ["ac", "non ac"])
         room_type = my_grid.selectbox('**Enter Room Type**', options = ["classroom", "lab"])
-        floor = my_grid.selectbox('**Enter Floor No.**', options = np.arange(0, 16))
+        floor = my_grid.selectbox('**Enter Floor No.**', options = range(0, 16))
         position = my_grid.selectbox('**Enter sensor-box current Position**', options = ["middle", "frontside", "backside", "corner"])
         my_grid.text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit)
         if st.session_state.occupancy and position:
             st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower(), room_condition.lower(), room_type.lower(), floor, weather.lower()]
             st.session_state.occupancy = ''
-        edited_df = st.data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'])
+        st.subheader(f"Current Occupancy: {st.session_state.df['Occupancy'].iloc[-1] if st.session_state.df.shape[0] else 0}", anchor = False)
+        edited_df = st.data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'], 
+                                   column_config={"Weather": st.column_config.SelectboxColumn("Weather", width="medium", options=["sunny", "cloudy", "partly cloudy", "overcast", "raining", "snowing", "foggy", "thunder and lightning", "windy"], required=True),
+                                                  "Position": st.column_config.SelectboxColumn("Position", width="medium", options=["middle", "frontside", "backside", "corner"], required=True),
+                                                  "Room Condition": st.column_config.SelectboxColumn("Room Condition", width="medium", options=["ac", "non ac"], required=True),
+                                                  "Room Type": st.column_config.SelectboxColumn("Room Type", width="medium", options=["classroom", "lab"], required=True),
+                                                  "Floor No.": st.column_config.SelectboxColumn("Floor No.", width="medium", options=range(0, 16), required=True)
+                                                  })
         st.session_state.df = edited_df
         # col_inner = col[0].columns(2)
         # with col_inner[0].container():
