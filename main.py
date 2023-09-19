@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit_authenticator as stauth
 from streamlit_extras.grid import grid
 from streamlit_extras.no_default_selectbox import selectbox
+import streamlit_antd_components as sac
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -33,7 +34,17 @@ if authentication_status == False:
 if authentication_status is None:
     st.warning("**⚠️ Please enter your username and password**")
 
+if 'df' not in st.session_state:
+    st.session_state['df'] = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position', 'Room Condition', 'Room Type', 'Floor No.', 'Weather'])
+    
+if 'occupancy' not in st.session_state:
+    st.session_state['occupancy'] = ''
+
+if 'widget' not in st.session_state:
+    st.session_state['widget'] = ''
+
 if authentication_status:
+    authenticator.logout("Logout", "sidebar")
     @st.cache_data
     def convert_df(df, index = False):
         return df.to_csv(index = index).encode('utf-8')
@@ -46,37 +57,24 @@ if authentication_status:
         tmp = st.session_state.editeddf['edited_rows']
         for i in tmp:
             for j in tmp[i]:
-                edited_df.loc[i, j] = tmp[i][j]
-            edited_df.loc[i, 'Last Modified'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
+                st.session_state['df'].loc[i, j] = tmp[i][j]
+            st.session_state['df'].loc[i, 'Last Modified'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
             # edited_df.loc[i]['Date'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
 
-    my_grid = grid([15, 1], vertical_align="top")
-    with my_grid.container():
-        st.header(f":red[Welcome] {name}", anchor = False)
-    with my_grid.container():
-        authenticator.logout("Logout", "main")
+    with st.sidebar:
+        page = sac.menu([
+        sac.MenuItem('👨‍👩‍👧‍👦 Occupancy Collection'),
+        sac.MenuItem('🔗 Merge data'),
+        sac.MenuItem('📩 Send file using Mail')
+        ], index=0, format_func='title', size='small', indent=15, open_index=None, open_all=True, return_index=True)
+
+    st.header(f":red[Welcome] {name}", anchor = False)
 
     st.markdown('''
         **🡥 Redirect to 📋[Pandas DataFrame Viewer](https://pandas-dataframe-viewer-plotter.streamlit.app/) to visualize data with AI**
                 ''')
     
-    # tab1, tab2, tab3, tab4 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "👀 View / Edit CSV file", "🔗 Concat multiple CSVs"])
-    
-    tab1, tab2, tab3 = st.tabs(["👨‍👩‍👧‍👦 Occupancy Collection", "🔗 Merge Occupancy with Sensor data", "📩 Send file using Mail"])
-
-    if 'df' not in st.session_state:
-        st.session_state['df'] = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position', 'Room Condition', 'Room Type', 'Floor No.', 'Weather'])
-
-    if 'view_edit_df' not in st.session_state:
-        st.session_state['view_edit_df'] = pd.DataFrame()
-    
-    if 'occupancy' not in st.session_state:
-        st.session_state['occupancy'] = ''
-
-    if 'widget' not in st.session_state:
-        st.session_state['widget'] = ''
-    
-    with tab1.container():
+    if page == 0:
         my_grid = grid([2, 2, 2], vertical_align="bottom")
         weather = my_grid.selectbox('**Specify Weather**', options = ["sunny", "cloudy", "partly cloudy", "overcast", "raining", "snowing", "foggy", "thunder and lightning", "windy"])
         room_condition = my_grid.selectbox('**Enter Room Condition**', options = ["ac", "non ac"])
@@ -85,17 +83,17 @@ if authentication_status:
         position = my_grid.selectbox('**Enter sensor-box current Position**', options = ["middle", "frontside", "backside", "corner"])
         my_grid.text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit)
         if st.session_state.occupancy and position:
-            st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower(), room_condition.lower(), room_type.lower(), floor, weather.lower()]
+            st.session_state['df'].loc[st.session_state['df'].shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower(), room_condition.lower(), room_type.lower(), floor, weather.lower()]
             st.session_state.occupancy = ''
-        st.subheader(f"Current Occupancy: {st.session_state.df['Occupancy'].iloc[-1] if st.session_state.df.shape[0] else 0}", anchor = False)
-        edited_df = st.data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'], 
+        st.subheader(f"Current Occupancy: {st.session_state['df']['Occupancy'].iloc[-1] if st.session_state['df'].shape[0] else 0}", anchor = False)
+        st.session_state['df'] = st.data_editor(st.session_state['df'], num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'], 
                                    column_config={"Weather": st.column_config.SelectboxColumn("Weather", width="medium", options=["sunny", "cloudy", "partly cloudy", "overcast", "raining", "snowing", "foggy", "thunder and lightning", "windy"], required=True),
                                                   "Position": st.column_config.SelectboxColumn("Position", width="medium", options=["middle", "frontside", "backside", "corner"], required=True),
                                                   "Room Condition": st.column_config.SelectboxColumn("Room Condition", width="medium", options=["ac", "non ac"], required=True),
                                                   "Room Type": st.column_config.SelectboxColumn("Room Type", width="medium", options=["classroom", "lab"], required=True),
                                                   "Floor No.": st.column_config.SelectboxColumn("Floor No.", width="medium", options=range(0, 16), required=True)
                                                   })
-        st.session_state.df = edited_df
+        # st.session_state['df'] = edited_df
         # col_inner = col[0].columns(2)
         # with col_inner[0].container():
         #     position = col_inner[0].text_input('**Enter current Position**', placeholder = 'Enter Position')
@@ -103,19 +101,17 @@ if authentication_status:
         #     with col_inner[0].container():
         #         col_inner[0].text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit_3)
         #     if st.session_state.occupancy and position:
-        #         st.session_state.df.loc[st.session_state.df.shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower()]
+        #         st.session_state['df'].loc[st.session_state['df'].shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower()]
         #         st.session_state.occupancy = ''
-        # edited_df = col[0].data_editor(st.session_state.df, num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'])
-        # st.session_state.df = edited_df
-    
-        st.caption('**:red[Note:] Only Time Entered and Occupancy can be modified.**')
+        # edited_df = col[0].data_editor(st.session_state['df'], num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'])
+        # st.session_state['df'] = edited_df
     
         disabled = True
-        if st.session_state.df.shape[0]:
+        if st.session_state['df'].shape[0]:
             disabled = False
-        st.download_button(label="**Download data as CSV**", data = convert_df(st.session_state.df), file_name=f'Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
+        st.download_button(label="**Download data as CSV**", data = convert_df(st.session_state['df']), file_name=f'Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
     
-    with tab2.container():
+    elif page == 1:
         disabled = True
         merged_df = pd.DataFrame()
         col = st.columns(2)
@@ -158,7 +154,7 @@ if authentication_status:
         st.download_button(label = "**Download Merged CSV file**", data = convert_df(merged_df, index = False), file_name=f'Sensor_data_with_Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
         st.caption('**:red[Note:] If timestamp range matches in both csv, then only it will be merged.**')
 
-    with tab3.container():
+    elif page == 3:
         def local_css(file_name):
             with open(file_name) as f:
                 st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
