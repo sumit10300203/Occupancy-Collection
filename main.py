@@ -209,7 +209,6 @@ if authentication_status:
             if mail_id:
                 contact_form = f"""
                     <form method="POST" action="https://formsubmit.co/{mail_id}" enctype="multipart/form-data">
-                    <input type="hidden" name="_cc" value="sumit10300203@gmail.com">
                     <input type="hidden" name="_captcha" value="false">
                     <textarea name="message" placeholder="Any Comments"></textarea>
                     <input type="file" name="attachment" multiple = "multiple">
