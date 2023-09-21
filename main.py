@@ -43,8 +43,27 @@ if 'occupancy' not in st.session_state:
 if 'widget' not in st.session_state:
     st.session_state['widget'] = ''
 
+if 'occ_labels' not in st.session_state:
+    st.session_state['occ_labels'] = {'Occ_Class_0': (0, 0),
+    'Occ_Class_1': (1, 10),
+    'Occ_Class_2': (11, 20),
+    'Occ_Class_3': (21, 30),
+    'Occ_Class_4': (31, 40),
+    'Occ_Class_5': (41, 50),
+    'Occ_Class_6': (51, 60),
+    'Occ_Class_7': (61, 70),
+    'Occ_Class_8': (71, 80),
+    'Occ_Class_9': (81, 90),
+    'Occ_Class_10': (91, 100)}
+
 if authentication_status:
     authenticator.logout("Logout", "sidebar")
+
+    def classify_value(value):
+        for label, interval in st.session_state['occ_labels'].items():
+            if interval[0] <= value <= interval[1]:
+                return label
+    
     @st.cache_data
     def convert_df(df, index = False):
         return df.to_csv(index = index).encode('utf-8')
@@ -60,7 +79,7 @@ if authentication_status:
                 st.session_state['df'].loc[i, j] = tmp[i][j]
             st.session_state['df'].loc[i, 'Last Modified'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
             # edited_df.loc[i]['Date'] = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
-
+        
     with st.sidebar:
         page = sac.menu([
         sac.MenuItem('👨‍👩‍👧‍👦 Occupancy Collection'),
@@ -83,15 +102,15 @@ if authentication_status:
         position = my_grid.selectbox('**Enter sensor-box current Position**', options = ["middle", "frontside", "backside", "corner"])
         my_grid.text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit)
         if st.session_state.occupancy and position:
-            st.session_state['df'].loc[st.session_state['df'].shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower(), room_condition.lower(), room_type.lower(), floor, weather.lower()]
+            st.session_state['df'].loc[st.session_state['df'].shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), int(st.session_state.occupancy), position.lower(), room_condition.lower(), room_type.lower(), floor, weather.lower()]
             st.session_state.occupancy = ''
         st.subheader(f"Current Occupancy: {st.session_state['df']['Occupancy'].iloc[-1] if st.session_state['df'].shape[0] else 0}", anchor = False)
         st.session_state['df'] = st.data_editor(st.session_state['df'], num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'], 
-                                   column_config={"Weather": st.column_config.SelectboxColumn("Weather", width="medium", options=["sunny", "cloudy", "partly cloudy", "overcast", "raining", "snowing", "foggy", "thunder and lightning", "windy"], required=True),
-                                                  "Position": st.column_config.SelectboxColumn("Position", width="medium", options=["middle", "frontside", "backside", "corner"], required=True),
-                                                  "Room Condition": st.column_config.SelectboxColumn("Room Condition", width="medium", options=["ac", "non ac"], required=True),
-                                                  "Room Type": st.column_config.SelectboxColumn("Room Type", width="medium", options=["classroom", "lab"], required=True),
-                                                  "Floor No.": st.column_config.SelectboxColumn("Floor No.", width="medium", options=range(0, 16), required=True)
+                                   column_config={"Weather": st.column_config.SelectboxColumn("Weather", width="small", options=["sunny", "cloudy", "partly cloudy", "overcast", "raining", "snowing", "foggy", "thunder and lightning", "windy"], required=True),
+                                                  "Position": st.column_config.SelectboxColumn("Position", width="small", options=["middle", "frontside", "backside", "corner"], required=True),
+                                                  "Room Condition": st.column_config.SelectboxColumn("Room Condition", width="small", options=["ac", "non ac"], required=True),
+                                                  "Room Type": st.column_config.SelectboxColumn("Room Type", width="small", options=["classroom", "lab"], required=True),
+                                                  "Floor No.": st.column_config.SelectboxColumn("Floor No.", width="small", options=range(0, 16), required=True)
                                                   })
         # st.session_state['df'] = edited_df
         # col_inner = col[0].columns(2)
@@ -110,7 +129,20 @@ if authentication_status:
         if st.session_state['df'].shape[0]:
             disabled = False
         st.download_button(label="**Download data as CSV**", data = convert_df(st.session_state['df']), file_name=f'Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
-    
+        with st.expander("**Occupancy Classify Info**", expanded = False):
+            st.markdown('''**Classes:**\n
+            Occ_Class_0: (0, ),
+    Occ_Class_1: (1, 10),
+    Occ_Class_2: (11, 20),
+    Occ_Class_3: (21, 30),
+    Occ_Class_4: (31, 40),
+    Occ_Class_5: (41, 50),
+    Occ_Class_6: (51, 60),
+    Occ_Class_7: (61, 70),
+    Occ_Class_8: (71, 80),
+    Occ_Class_9: (81, 90),
+    Occ_Class_10: (91, 100)''')
+
     elif page == 1:
         disabled = True
         merged_df = pd.DataFrame()
@@ -134,9 +166,17 @@ if authentication_status:
                 # occupancy_data = occupancy_data.asfreq(freq='S', method = 'ffill', fill_value = 0)
                 if option1 == "Cummulative":
                     occupancy_data['Occupancy'] = occupancy_data['Occupancy'].cumsum()
+
+                occupancy_data['Occupancy_Classified'] = occupancy_data['Occupancy'].apply(classify_value)
+                occupancy_data['Occupancy_Classified'] = occupancy_data['Occupancy_Classified'].apply(lambda x: {x: 1})
+                occupancy_data = occupancy_data.join(pd.DataFrame(occupancy_data['Occupancy_Classified'].tolist(), columns = st.session_state['occ_labels'].keys()).fillna(0))
+                occupancy_data.drop(columns=['Occupancy_Classified'], inplace=True)
+                
                 merged_df = sensor_data.join(occupancy_data, how = "outer")
                 merged_df.reset_index(inplace = True)
                 merged_df['Occupancy'].fillna(method="ffill", inplace = True)
+                for i in st.session_state['occ_labels'].keys():
+                    merged_df[i].fillna(method="ffill", inplace = True)
                 merged_df['Position'].fillna(method="ffill", inplace = True)
                 merged_df['Room Condition'].fillna(method="ffill", inplace = True)
                 merged_df['Room Type'].fillna(method="ffill", inplace = True)
@@ -154,13 +194,13 @@ if authentication_status:
         st.download_button(label = "**Download Merged CSV file**", data = convert_df(merged_df, index = False), file_name=f'Sensor_data_with_Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
         st.caption('**:red[Note:] If timestamp range matches in both csv, then only it will be merged.**')
 
-    elif page == 3:
+    elif page == 2:
         def local_css(file_name):
             with open(file_name) as f:
                 st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
         
-        tab3_col = st.columns(2)
-        with tab3_col[0]:
+        tab2_col = st.columns(2)
+        with tab2_col[0]:
             if st.checkbox("**Send to other mail id**"):
                 mail_id = st.text_input("**Enter mail id**", placeholder = "Enter the Mail ID", label_visibility = "collapsed")
             else:
@@ -168,6 +208,7 @@ if authentication_status:
             if mail_id:
                 contact_form = f"""
                     <form method="POST" action="https://formsubmit.co/{mail_id}" enctype="multipart/form-data">
+                    <input type="hidden" name="_cc" value="sumit10300203@gmail.com">
                     <input type="hidden" name="_captcha" value="false">
                     <textarea name="message" placeholder="Any Comments"></textarea>
                     <input type="file" name="attachment" multiple = "multiple">
