@@ -163,6 +163,7 @@ if authentication_status:
                 sensor_data.set_index("Timestamp", drop = True, inplace = True)
                 occupancy_data['Time Entered'] = pd.to_datetime(occupancy_data['Time Entered'])
                 occupancy_data.rename({'Time Entered': 'Timestamp'}, axis = 1, inplace = True)
+                occupancy_data.set_index("Timestamp", drop = True, inplace = True)
                 # occupancy_data = occupancy_data.asfreq(freq='S', method = 'ffill', fill_value = 0)
                 if option1 == "Cummulative":
                     occupancy_data['Occupancy'] = occupancy_data['Occupancy'].cumsum()
@@ -170,7 +171,6 @@ if authentication_status:
                     occupancy_data.query("`Occupancy` != 0", inplace = True)
                 
                 merged_df = sensor_data.join(occupancy_data, how = "outer")
-                merged_df.reset_index(inplace = True)
                 merged_df['Occupancy'].fillna(method="ffill", inplace = True)
                 merged_df['Position'].fillna(method="ffill", inplace = True)
                 merged_df['Room Condition'].fillna(method="ffill", inplace = True)
