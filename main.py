@@ -8,6 +8,7 @@ import numpy as np
 from datetime import datetime
 from pytz import timezone
 import json as js
+import traceback
 
 st.set_page_config(
     page_title="Occupancy Collection",
@@ -61,7 +62,7 @@ if authentication_status:
 
     def classify_value(value):
         for label, interval in st.session_state['occ_labels'].items():
-            if interval[0] <= value <= interval[1]:
+            if interval[0] <= int(value) <= interval[1]:
                 return label
     
     @st.cache_data
@@ -102,7 +103,7 @@ if authentication_status:
         position = my_grid.selectbox('**Enter sensor-box current Position**', options = ["middle", "frontside", "backside", "corner"])
         my_grid.text_input('**Enter current Occupancy**', key='widget', placeholder = 'Enter Occupancy', on_change=submit)
         if st.session_state.occupancy and position:
-            st.session_state['df'].loc[st.session_state['df'].shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), int(st.session_state.occupancy), position.lower(), room_condition.lower(), room_type.lower(), floor, weather.lower()]
+            st.session_state['df'].loc[st.session_state['df'].shape[0]] = [datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"), st.session_state.occupancy, position.lower(), room_condition.lower(), room_type.lower(), floor, weather.lower()]
             st.session_state.occupancy = ''
         st.subheader(f"Current Occupancy: {st.session_state['df']['Occupancy'].iloc[-1] if st.session_state['df'].shape[0] else 0}", anchor = False)
         st.session_state['df'] = st.data_editor(st.session_state['df'], num_rows="fixed", key = 'editeddf', on_change = update, hide_index = True, use_container_width = True, disabled=['Last Modified'], 
@@ -162,7 +163,6 @@ if authentication_status:
                 sensor_data.set_index("Timestamp", drop = True, inplace = True)
                 occupancy_data['Time Entered'] = pd.to_datetime(occupancy_data['Time Entered'])
                 occupancy_data.rename({'Time Entered': 'Timestamp'}, axis = 1, inplace = True)
-                occupancy_data.set_index('Timestamp', drop = True, inplace = True)
                 # occupancy_data = occupancy_data.asfreq(freq='S', method = 'ffill', fill_value = 0)
                 if option1 == "Cummulative":
                     occupancy_data['Occupancy'] = occupancy_data['Occupancy'].cumsum()
@@ -171,6 +171,7 @@ if authentication_status:
                 occupancy_data['Occupancy_Classified'] = occupancy_data['Occupancy_Classified'].apply(lambda x: {x: 1})
                 occupancy_data = occupancy_data.join(pd.DataFrame(occupancy_data['Occupancy_Classified'].tolist(), columns = st.session_state['occ_labels'].keys()).fillna(0))
                 occupancy_data.drop(columns=['Occupancy_Classified'], inplace=True)
+                occupancy_data.set_index('Timestamp', drop = True, inplace = True)
                 
                 merged_df = sensor_data.join(occupancy_data, how = "outer")
                 merged_df.reset_index(inplace = True)
@@ -188,6 +189,7 @@ if authentication_status:
                     merged_df = merged_df[merged_df['Occupancy'] != 0].reset_index(drop = True)
                 disabled = False
             except:
+                print(traceback.format_exc())
                 st.error('**Error in CSV files, please check the columns name are identical to the requirement and re upload again**', icon="🚨")
                 disabled = True
 
