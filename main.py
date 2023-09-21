@@ -168,24 +168,24 @@ if authentication_status:
                     occupancy_data['Occupancy'] = occupancy_data['Occupancy'].cumsum()
                 if option2 == 'No':
                     occupancy_data.query("`Occupancy` != 0", inplace = True)
-
-                occupancy_data['Occupancy_Classified'] = occupancy_data['Occupancy'].apply(classify_value)
-                occupancy_data['Occupancy_Classified'] = occupancy_data['Occupancy_Classified'].apply(lambda x: {x: 1})
-                occupancy_data = occupancy_data.join(pd.DataFrame(occupancy_data['Occupancy_Classified'].tolist(), columns = st.session_state['occ_labels'].keys()).fillna(0))
-                occupancy_data.drop(columns=['Occupancy_Classified'], inplace=True)
-                occupancy_data.set_index('Timestamp', drop = True, inplace = True)
                 
                 merged_df = sensor_data.join(occupancy_data, how = "outer")
                 merged_df.reset_index(inplace = True)
                 merged_df['Occupancy'].fillna(method="ffill", inplace = True)
-                for i in st.session_state['occ_labels'].keys():
-                    merged_df[i].fillna(method="ffill", inplace = True)
                 merged_df['Position'].fillna(method="ffill", inplace = True)
                 merged_df['Room Condition'].fillna(method="ffill", inplace = True)
                 merged_df['Room Type'].fillna(method="ffill", inplace = True)
                 merged_df['Floor No.'].fillna(method="ffill", inplace = True)
                 merged_df['Weather'].fillna(method="ffill", inplace = True)
                 merged_df.dropna(how = 'any', inplace = True)
+                
+                merged_df.reset_index(inplace = True)
+                merged_df['Occupancy_Classified'] = merged_df['Occupancy'].apply(classify_value)
+                merged_df['Occupancy_Classified'] = merged_df['Occupancy_Classified'].apply(lambda x: {x: 1})
+                merged_df = merged_df.join(pd.DataFrame(merged_df['Occupancy_Classified'].tolist(), columns = st.session_state['occ_labels'].keys()).fillna(0))
+                merged_df.drop(columns=['Occupancy_Classified'], inplace=True)
+                merged_df.set_index('Timestamp', drop = True, inplace = True)
+                
                 disabled = False
             except:
                 print(traceback.format_exc())
