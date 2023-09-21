@@ -166,6 +166,8 @@ if authentication_status:
                 # occupancy_data = occupancy_data.asfreq(freq='S', method = 'ffill', fill_value = 0)
                 if option1 == "Cummulative":
                     occupancy_data['Occupancy'] = occupancy_data['Occupancy'].cumsum()
+                if option2 == 'No':
+                    occupancy_data.query("`Occupancy` != 0", inplace = True)
 
                 occupancy_data['Occupancy_Classified'] = occupancy_data['Occupancy'].apply(classify_value)
                 occupancy_data['Occupancy_Classified'] = occupancy_data['Occupancy_Classified'].apply(lambda x: {x: 1})
@@ -184,9 +186,6 @@ if authentication_status:
                 merged_df['Floor No.'].fillna(method="ffill", inplace = True)
                 merged_df['Weather'].fillna(method="ffill", inplace = True)
                 merged_df.dropna(how = 'any', inplace = True)
-                if option2 == 'No':
-                    merged_df['Occupancy'].replace(to_replace=0, method='ffill', inplace=True)
-                    merged_df = merged_df[merged_df['Occupancy'] != 0].reset_index(drop = True)
                 disabled = False
             except:
                 print(traceback.format_exc())
