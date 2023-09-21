@@ -62,7 +62,7 @@ if authentication_status:
 
     def classify_value(value):
         for label, interval in st.session_state['occ_labels'].items():
-            if interval[0] <= int(value) <= interval[1]:
+            if interval[0] <= value <= interval[1]:
                 return label
     
     @st.cache_data
