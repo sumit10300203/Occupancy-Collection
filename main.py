@@ -192,7 +192,7 @@ if authentication_status:
                 st.error('**Error in CSV files, please check the columns name are identical to the requirement and re upload again**', icon="🚨")
                 disabled = True
 
-        st.download_button(label = "**Download Merged CSV file**", data = convert_df(merged_df, index = False), file_name=f'Sensor_data_with_Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
+        st.download_button(label = "**Download Merged CSV file**", data = convert_df(merged_df, index = True), file_name=f'Sensor_data_with_Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
         st.caption('**:red[Note:] If timestamp range matches in both csv, then only it will be merged.**')
 
     elif page == 2:
