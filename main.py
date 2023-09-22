@@ -179,12 +179,7 @@ if authentication_status:
                 merged_df['Weather'].fillna(method="ffill", inplace = True)
                 merged_df.dropna(how = 'any', inplace = True)
                 
-                merged_df.reset_index(inplace = True)
                 merged_df['Occupancy_Classified'] = merged_df['Occupancy'].apply(classify_value)
-                merged_df['Occupancy_Classified'] = merged_df['Occupancy_Classified'].apply(lambda x: {x: 1})
-                merged_df = merged_df.join(pd.DataFrame(merged_df['Occupancy_Classified'].tolist(), columns = st.session_state['occ_labels'].keys()).fillna(0))
-                merged_df.drop(columns=['Occupancy_Classified'], inplace=True)
-                merged_df.set_index('Timestamp', drop = True, inplace = True)
                 
                 disabled = False
             except:
