@@ -86,7 +86,7 @@ if True:
         page = sac.menu([
         sac.MenuItem('👨‍👩‍👧‍👦 Occupancy Collection'),
         sac.MenuItem('🔗 Merge data'),
-        sac.MenuItem('📩 Send file using Mail')
+        # sac.MenuItem('📩 Send file using Mail')
         ], index=0, format_func='title', size='small', indent=15, open_index=None, open_all=True, return_index=True)
 
     # st.header(f":red[Welcome] {name}", anchor = False)
