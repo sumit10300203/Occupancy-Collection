@@ -57,7 +57,7 @@ if 'occ_labels' not in st.session_state:
     'Occ_Class_9': (81, 90),
     'Occ_Class_10': (91, 100)}
 
-if authentication_status or True:
+# if authentication_status or True:
     # authenticator.logout("Logout", "sidebar")
 
     def classify_value(value):
