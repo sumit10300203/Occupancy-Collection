@@ -58,8 +58,9 @@ if 'occ_labels' not in st.session_state:
     'Occ_Class_10': (91, 100)}
 
 # if authentication_status or True:
-    # authenticator.logout("Logout", "sidebar")
+#     authenticator.logout("Logout", "sidebar")
 
+if True:
     def classify_value(value):
         for label, interval in st.session_state['occ_labels'].items():
             if interval[0] <= value <= interval[1]:
