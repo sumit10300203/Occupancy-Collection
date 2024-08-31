@@ -192,29 +192,29 @@ if True:
         st.download_button(label = "**Download Merged CSV file**", data = convert_df(merged_df, index = True), file_name=f'Sensor_data_with_Occupancy_{datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d_%H:%M:%S")}.csv', mime='text/csv', disabled = disabled)
         st.caption('**:red[Note:] If timestamp range matches in both csv, then only it will be merged.**')
 
-    elif page == 2:
-        def local_css(file_name):
-            with open(file_name) as f:
-                st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    # elif page == 2:
+    #     def local_css(file_name):
+    #         with open(file_name) as f:
+    #             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
         
-        tab2_col = st.columns(2)
-        with tab2_col[0]:
-            if st.checkbox("**Send to other mail id**"):
-                mail_id = st.text_input("**Enter mail id**", placeholder = "Enter the Mail ID", label_visibility = "collapsed")
-            else:
-                mail_id = selectbox("**Select the mail id from the below Authorised users**", options = st.session_state['authorization_df']['username'].to_list(), no_selection_label = None)
-            if mail_id:
-                contact_form = f"""
-                    <form method="POST" action="https://formsubmit.co/{mail_id}" enctype="multipart/form-data">
-                    <input type="hidden" name="_cc" value="sumit10300203@gmail.com">
-                    <input type="hidden" name="_captcha" value="false">
-                    <textarea name="message" placeholder="Any Comments"></textarea>
-                    <input type="file" name="attachment" multiple = "multiple">
-                    <button type="submit">Send</button>
-                    </form>
-                    """
-                st.markdown(contact_form, unsafe_allow_html = True)
-                local_css("style/style.css")
+    #     tab2_col = st.columns(2)
+    #     with tab2_col[0]:
+    #         if st.checkbox("**Send to other mail id**"):
+    #             mail_id = st.text_input("**Enter mail id**", placeholder = "Enter the Mail ID", label_visibility = "collapsed")
+    #         else:
+    #             mail_id = selectbox("**Select the mail id from the below Authorised users**", options = st.session_state['authorization_df']['username'].to_list(), no_selection_label = None)
+    #         if mail_id:
+    #             contact_form = f"""
+    #                 <form method="POST" action="https://formsubmit.co/{mail_id}" enctype="multipart/form-data">
+    #                 <input type="hidden" name="_cc" value="sumit10300203@gmail.com">
+    #                 <input type="hidden" name="_captcha" value="false">
+    #                 <textarea name="message" placeholder="Any Comments"></textarea>
+    #                 <input type="file" name="attachment" multiple = "multiple">
+    #                 <button type="submit">Send</button>
+    #                 </form>
+    #                 """
+    #             st.markdown(contact_form, unsafe_allow_html = True)
+    #             local_css("style/style.css")
 
     # with tab3.container():
     #     def reset():
