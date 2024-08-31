@@ -1,5 +1,5 @@
 import streamlit as st
-import streamlit_authenticator as stauth
+# import streamlit_authenticator as stauth
 from streamlit_extras.grid import grid
 from streamlit_extras.no_default_selectbox import selectbox
 import streamlit_antd_components as sac
@@ -16,24 +16,24 @@ st.set_page_config(
     layout="wide"
 )
 
-if 'authorization_df' not in st.session_state:
-    st.session_state['authorization_df'] = pd.read_csv("Authentication.csv")
+# if 'authorization_df' not in st.session_state:
+#     st.session_state['authorization_df'] = pd.read_csv("Authentication.csv")
 
-credentials = {"usernames":{}}
+# credentials = {"usernames":{}}
 
-for uname,name,pwd in zip(st.session_state.authorization_df['username'],st.session_state.authorization_df['Name'],st.session_state.authorization_df['key']):
-    user_dict = {"name": name, "password": pwd}
-    credentials["usernames"].update({uname: user_dict})
+# for uname,name,pwd in zip(st.session_state.authorization_df['username'],st.session_state.authorization_df['Name'],st.session_state.authorization_df['key']):
+#     user_dict = {"name": name, "password": pwd}
+#     credentials["usernames"].update({uname: user_dict})
 
-authenticator = stauth.Authenticate(credentials, "occupancy_collector_login", "login", cookie_expiry_days = 1)
+# authenticator = stauth.Authenticate(credentials, "occupancy_collector_login", "login", cookie_expiry_days = 1)
 
-name, authentication_status, username = authenticator.login("Login", "main")
+# name, authentication_status, username = authenticator.login("Login", "main")
 
-if authentication_status == False:
-    st.error("**🚨 Username/password is incorrect**")
+# if authentication_status == False:
+#     st.error("**🚨 Username/password is incorrect**")
 
-if authentication_status is None:
-    st.warning("**⚠️ Please enter your username and password**")
+# if authentication_status is None:
+#     st.warning("**⚠️ Please enter your username and password**")
 
 if 'df' not in st.session_state:
     st.session_state['df'] = pd.DataFrame(columns = ['Time Entered', 'Last Modified', 'Occupancy', 'Position', 'Room Condition', 'Room Type', 'Floor No.', 'Weather'])
@@ -57,8 +57,8 @@ if 'occ_labels' not in st.session_state:
     'Occ_Class_9': (81, 90),
     'Occ_Class_10': (91, 100)}
 
-if authentication_status:
-    authenticator.logout("Logout", "sidebar")
+if authentication_status or True:
+    # authenticator.logout("Logout", "sidebar")
 
     def classify_value(value):
         for label, interval in st.session_state['occ_labels'].items():
