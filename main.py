@@ -88,7 +88,8 @@ if 'occ_labels' not in st.session_state:
         sac.MenuItem('📩 Send file using Mail')
         ], index=0, format_func='title', size='small', indent=15, open_index=None, open_all=True, return_index=True)
 
-    st.header(f":red[Welcome] {name}", anchor = False)
+    # st.header(f":red[Welcome] {name}", anchor = False)
+    st.header(f":red[Welcome] {Guest}", anchor = False)
 
     st.markdown('''
         **🡥 Redirect to 📋[Pandas DataFrame Viewer](https://pandas-dataframe-viewer-plotter.streamlit.app/) to visualize data with AI**
